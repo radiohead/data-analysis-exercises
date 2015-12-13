@@ -1,6 +1,7 @@
 import math
 import numpy
 import seaborn
+import utils
 
 from csv import DictReader
 
@@ -61,7 +62,7 @@ def plot_parallel_coordinates(data_frame):
     pyplot.clf()
 
 def plot_pca_projection(data, normalized = False):
-    samples = numpy.array([row.values()[0:-2] for row in data])
+    samples = numpy.array([[value for key, value in row.items() if key not in ['quality']] for row in data])
     classes = numpy.array([row['quality'] for row in data])
     class_names = numpy.unique(classes)
     colors = seaborn.color_palette('pastel', n_colors = len(class_names))
@@ -74,7 +75,7 @@ def plot_pca_projection(data, normalized = False):
 
     pyplot.figure()
     for c, i, class_name in zip(colors, range(0, len(class_names)), class_names):
-        pyplot.scatter(transformed[classes == i, 0], transformed[classes == i, 1], c=c, label=class_name, s=20, alpha=0.7)
+        pyplot.scatter(transformed[classes == i, 0], transformed[classes == i, 1], c=c, label=class_name)
     pyplot.legend()
 
     pyplot.axhline(0, color='black')
@@ -82,8 +83,8 @@ def plot_pca_projection(data, normalized = False):
     pyplot.grid(True)
     pyplot.savefig('build/pca_projection' + ('_normalized' if normalized else '') + '.png')
 
-def plot_mds():
-    samples = numpy.array([row.values()[0:-2] for row in data])
+def plot_mds(data):
+    samples = numpy.array([[value for key, value in row.items() if key not in ['quality']] for row in data])
     classes = numpy.array([row['quality'] for row in data])
     class_names = numpy.unique(classes)
     colors = seaborn.color_palette('pastel', n_colors = len(class_names))
@@ -93,7 +94,7 @@ def plot_mds():
 
     pyplot.figure()
     for c, i, class_name in zip(colors, range(0, len(class_names)), class_names):
-        pyplot.scatter(transformed[classes == i, 0], transformed[classes == i, 1], c=c, label=class_name, s=20, alpha=0.7)
+        pyplot.scatter(transformed[classes == i, 0], transformed[classes == i, 1], c=c, label=class_name)
     pyplot.legend()
 
     pyplot.axhline(0, color='black')
@@ -102,13 +103,7 @@ def plot_mds():
     pyplot.savefig('build/2d_mds.png')
 
 def main():
-    data = []
-
-    with open('data/winequality-red.csv', 'r') as csv_file:
-        for row in DictReader(csv_file, delimiter=';'):
-            for k in row:
-                row[k] = float(row[k])
-            data.append(row)
+    data = utils.read_data_from_csv('data/winequality-red.csv')
 
     for attribute in data[0].keys():
         for name, func in BIN_FUNCTIONS.iteritems():
@@ -120,6 +115,8 @@ def main():
 
     plot_pca_projection(data)
     plot_pca_projection(data, normalized = True)
+
+    plot_mds(data)
 
     data_frame.corr(method='pearson').to_csv('build/pearson.csv')
     data_frame.corr(method='kendall').to_csv('build/kendall.csv')
