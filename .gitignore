@@ -1,3 +1,5 @@
 build/*.png
 build/*.csv
 build/histograms/*.png
+
+*.pyc
